@@ -1,8 +1,13 @@
 ---
 title: "Intro to time series in R"
+author: "Shravan Kuchkula"
 output:
-  github_document: default
-  html_notebook: default
+  github_document:
+    toc: yes
+  html_document:
+    keep_md: yes
+    theme: cosmo
+    toc: yes
 ---
 
 In this notebook, we will learn to use R for time series analysis and forecasting. We will also learn, basic `time series models` :
@@ -52,16 +57,152 @@ plot(Nile, xlab = "Year", ylab = "River Volume (1e9 m^{3})")
 plot(Nile, xlab = "Year", ylab = "River Volume (1e9 m^{3})", main = "Annual River Nile Volume at Aswan, 1871-1970", type="b")
 ```
 
+In addition to viewing your data and plotting over time, there are several additional operations that can be performed on time series datasets.
 
+The `start()` and `end()` functions return the time index of the first and last observations, respectively. The `time()` function calculates a vector of time indices, with one element for each time index on which the series was observed.
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+The `deltat()` function returns the fixed time interval between observations and the `frequency()` function returns the number of observations per unit time. Finally, the `cycle()` function returns the position in the cycle of each observation.
 
 ```{r}
-plot(cars)
+# Plot AirPassengers
+plot(AirPassengers)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r}
+# View the start and end dates of AirPassengers
+start(AirPassengers)
+end(AirPassengers)
+```
+`time` function:
+```{r}
+time(AirPassengers)
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+`deltat` function
+```{r}
+deltat(AirPassengers)
+```
+
+`frequency` function
+
+```{r}
+frequency(AirPassengers)
+```
+
+`cycle` function
+
+```{r}
+cycle(AirPassengers)
+```
+
+> These commands provide considerable descriptive information about the structures and patterns in your time series data. It may help to keep these commands handy when working with your own time series data.
+
+## Missing Values in Time Series
+
+Sometimes there are missing values in time series data, denoted NA in R, and it is useful to know their locations. It is also important to know how missing values are handled by various R functions. Sometimes we may want to ignore any missingness, but other times we may wish to impute or estimate the missing values.
+
+Let's again consider the monthly AirPassengers dataset, but now the data for the year 1956 are missing. In this exercise, you'll explore the implications of this missing data and impute some new data to solve the problem.
+
+The mean() function calculates the sample mean, but it fails in the presence of any NA values. Use mean(___, na.rm = TRUE) to calculate the mean with all missing values removed. It is common to replace missing values with the mean of the observed values. Does this simple data imputation scheme appear adequate when applied the the AirPassengers dataset?
+
+
+```{r}
+# Plot the AirPassengers data
+plot(AirPassengers)
+```
+
+Impute the missing values with the mean
+
+```{r}
+# Compute the mean of AirPassengers
+mean(AirPassengers)
+
+# Impute mean values to NA in AirPassengers
+AirPassengers[85:96] <- mean(AirPassengers, na.rm = TRUE)
+
+# Generate another plot of AirPassengers
+plot(AirPassengers)
+```
+
+Based on your plot, it seems that simple data imputation using the mean is not a great method to approximate what's really going on in the AirPassengers data.
+
+## Basic Time Series objects
+The function `ts()` can be applied to create time series objects. A time series object is a vector (univariate) or matrix (multivariate) with additional attributes, including time indices for each observation, the sampling frequency and time increment between observations, and the cycle length for periodic data. Such objects are of the ts class, and represent data that has been observed at (approximately) equally spaced time points. 
+
+> The advantage of creating and working with time series objects of the ts class is that many methods are available for utilizing time series attributes, such as time index information. For example, as you've seen in earlier exercises, calling plot() on a ts object will automatically generate a plot over time.
+
+In this exercise, you'll familiarize yourself with the ts class by encoding some time series data (saved as data_vector) into ts and exploring the result.
+
+Your time series data_vector starts in the year 2004 and has 4 observations per year (i.e. it is quarterly data).
+
+```{r}
+# Create a data_vector
+data_vector <- rnorm(50, mean=0, sd=1)
+
+# Use plot() to view data_vector
+plot(data_vector)
+```
+
+```{r}
+# Convert data_vector to a ts object with start = 2004 and frequency = 4
+time_series <- ts(data_vector, start=2004, frequency=4)
+
+# Use print() and plot() to view time_series
+print(time_series)
+plot(time_series)
+```
+
+
+> Great! As you can see, ts objects are treated differently by commands such as print() and plot(). For example, automatic use of the time-index in your calls to plot() requires a ts object.
+
+## Testing whether an object is a time series
+When you work to create your own datasets, you can build them as ts objects. Recall the dataset data_vector from the previous exercise, which was just a vector of numbers, and time_series, the ts object you created from data_vector using the ts() function and information regarding the start time and the observation frequency.
+
+When you use datasets from others, such as those included in an R package, you can check whether they are ts objects using the is.ts() command. The result of the test is either TRUE when the data is of the ts class, or FALSE if it is not.
+
+```{r}
+# Check whether data_vector and time_series are ts objects
+is.ts(data_vector)
+is.ts(time_series)
+
+# Check whether Nile is a ts object
+is.ts(Nile)
+
+# Check whether AirPassengers is a ts object
+is.ts(AirPassengers)
+```
+
+Well done! is.ts() is a simple command for determining whether or not you're working with a ts object. As you can see, the Nile and AirPassengers datasets you worked with earlier in the chapter are both encoded as ts objects.
+
+## Plot a time series object
+It is often very useful to plot data we are analyzing, as is the case when conducting time series analysis. If the dataset under study is of the ts class, then the plot() function has methods that automatically incorporate time index information into a figure.
+
+Let's consider the **eu_stocks** dataset (available in R by default as EuStockMarkets). This dataset contains daily closing prices of major European stock indices from 1991-1998, specifically, from Germany (DAX), Switzerland (SMI), France (CAC), and the UK (FTSE). The data were observed when the markets were open, so there are no observations on weekends and holidays. We will proceed with the approximation that this dataset has evenly spaced observations and is a four dimensional time series.
+
+```{r}
+# Check whether eu_stocks is a ts object
+is.ts(EuStockMarkets)
+```
+
+```{r}
+# View the start, end, and frequency of eu_stocks
+start(EuStockMarkets)
+end(EuStockMarkets)
+frequency(EuStockMarkets)
+```
+
+```{r}
+# Generate a simple plot of eu_stocks
+plot(EuStockMarkets)
+```
+
+```{r}
+# Use ts.plot with eu_stocks
+ts.plot(EuStockMarkets, col = 1:4, xlab = "Year", ylab = "Index Value", main = "Major European Stock Indices, 1991-1998")
+
+# Add a legend to your ts.plot
+legend("topleft", colnames(EuStockMarkets), lty = 1, col = 1:4, bty = "n")
+```
+
+
+> Congratulations! You've mastered the basics of the ts class in R, including encoding ts objects, viewing basic time series qualities, and plotting time series data. Now let's move on to the next chapter! You have finished the chapter "Exploratory time series data analysis"!
