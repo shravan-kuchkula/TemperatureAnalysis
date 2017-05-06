@@ -1,0 +1,47 @@
+---
+title: "Introduction to Data"
+author: "Shravan Kuchkula"
+output:
+  github_document:
+    toc: yes
+  html_document:
+    keep_md: yes
+    theme: cosmo
+    toc: yes
+---
+
+## Language of data
+
+We will first start by exploring the `high school and beyond` **hsb2** dataset which part of the `openintro` package. Notice here that if we are loading a dataset which is part of a package, we will be using the `data()` function to load the dataset. Other ways to import data into R would be from flatfiles, websites, APIs etc.
+
+As usual, we will use our function to install/load the required packages into this session.
+
+```{r message = FALSE, warning = FALSE}
+# Install a package and load it.
+installRequiredPackages <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[,"Package"])]
+  if (length(new.pkg))
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+}
+
+# List of packages used in this session
+libs <- c("dplyr", "ggplot2", "tidyr", "openintro")
+
+# call the function
+installRequiredPackages(libs)
+```
+
+Load the dataset `hsb2` 
+
+```{r}
+data("hsb2")
+```
+
+Glimpse the dataset `hsb2`
+
+```{r}
+glimpse(hsb2)
+```
+
+
