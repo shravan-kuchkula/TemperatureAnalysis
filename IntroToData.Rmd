@@ -44,4 +44,13 @@ Glimpse the dataset `hsb2`
 glimpse(hsb2)
 ```
 
+Load the UCBAdmissions dataset and store it in ucb_admit.
+```{r}
+ucb_admit <- data("UCBAdmissions")
 
+str(ucb_admit)
+
+# Count number of male and female applicants admitted
+#ucb_counts <- ucb_admit %>%
+#  count(gender, Admit)
+```
